@@ -21,6 +21,19 @@
                 <div v-if="errors.title" class="invalid-feedback">{{ errors.title }}</div>
               </div>
 
+              <!-- Поле для ввода слага (необязательное) -->
+              <div class="mb-3">
+                <label for="slug" class="form-label">URL-идентификатор (слаг)</label>
+                <input
+                  id="slug"
+                  v-model="form.slug"
+                  type="text"
+                  class="form-control"
+                  placeholder="например: moya-zadacha"
+                />
+                <div class="form-text">Оставьте пустым для автоматической генерации.</div>
+              </div>
+
               <!-- Описание -->
               <div class="mb-3">
                 <label for="description" class="form-label">Описание</label>
@@ -103,6 +116,7 @@ const form = reactive({
   budget: 0,
   deadline: '',
   category: '',
+  slug: ''
 })
 
 const errors = reactive({

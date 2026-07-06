@@ -8,7 +8,7 @@
       </div>
       <div class="mb-3">
         <label for="slug" class="form-label">URL-идентификатор (slug)</label>
-        <input id="slug" v-model="form.slug" class="form-control" placeholder="оставьте пустым для автогенерации" />
+        <input id="slug" type="text" v-model="form.slug" class="form-control" placeholder="оставьте пустым для автогенерации" @input="onSlugInput"/>
       </div>
       <div class="mb-3">
         <label for="description" class="form-label">Описание</label>
@@ -38,7 +38,7 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, ref } from 'vue'
+import { reactive, onMounted, ref, watch } from 'vue'
 import { useTasksStore } from '@/stores/tasks'
 import { useAuthStore } from '@/stores/auth'
 import { useRoute, useRouter } from 'vue-router'
@@ -47,6 +47,7 @@ const store = useTasksStore()
 const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
+let slugManuallyChanged = false
 
 const form = reactive({
   title: '',
@@ -94,5 +95,23 @@ async function update() {
   } catch (e) {
     alert('Ошибка обновления: ' + (e.response?.data?.detail || e.message))
   }
+}
+
+function onTitleChange(newTitle) {
+  // Если пользователь вручную не менял slug, очищаем его
+  if (!slugManuallyChanged) {
+    form.slug = ''
+  }
+}
+
+watch(() => form.title, (newTitle, oldTitle) => {
+  if (newTitle !== oldTitle) {
+    onTitleChange(newTitle)
+  }
+})
+
+// При ручном вводе в поле slug помечаем, что пользователь его менял
+function onSlugInput() {
+  slugManuallyChanged = true
 }
 </script>
