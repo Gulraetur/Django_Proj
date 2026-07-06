@@ -99,3 +99,17 @@ class DeliverTaskView(generics.CreateAPIView):
 
         serializer.save(task=task)
         change_task_status(task, 'review', self.request.user, "Исполнитель сдал результат")
+        
+class PublishTaskView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id)
+        # Только заказчик (владелец) может опубликовать
+        if task.client != request.user:
+            return response.Response({"detail": "Вы не являетесь владельцем этой задачи"}, status=status.HTTP_403_FORBIDDEN)
+        if task.status != 'draft':
+            return response.Response({"detail": "Можно опубликовать только черновик"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        change_task_status(task, 'search', request.user, "Задача опубликована")
+        return response.Response({"status": "search", "detail": "Задача опубликована"}, status=status.HTTP_200_OK)

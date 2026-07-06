@@ -6,10 +6,13 @@ export const useResponsesStore = defineStore('responses', () => {
   const items = ref([])
 
   async function fetchMyResponses() {
-    const response = await getMyResponses()
-    items.value = response.data
-    return items.value
+    const res = await getMyResponses()
+    items.value = res.data
   }
 
-  return { items, fetchMyResponses }
+  function hasResponded(taskId) {
+    return items.value.some(r => r.task === taskId)
+  }
+
+  return { items, fetchMyResponses, hasResponded }
 })

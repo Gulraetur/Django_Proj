@@ -37,8 +37,10 @@
         v-for="task in tasks"
         :key="task.id"
         :task="task"
-        :showRespondButton="authStore.isExecutor && task.status === 'search' && task.client.id !== authStore.user?.id"
+        :showRespondButton="showRespondButton(task)"
         @respond="handleRespond"
+        @edit="editTask"
+        @delete="deleteTask"
       />
       <p v-if="tasks.length === 0">Нет задач, соответствующих фильтрам.</p>
     </div>
@@ -49,13 +51,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { useTasksStore } from '@/stores/tasks'
 import { useAuthStore } from '@/stores/auth'
+import { useResponsesStore } from '@/stores/responses'
 import { useRoute } from 'vue-router'
 import TaskRow from '@/components/TaskRow.vue'
 
 const tasksStore = useTasksStore()
 const authStore = useAuthStore()
+const responsesStore = useResponsesStore()
 const route = useRoute()
 const loading = ref(true)
+
+
+const user = computed(() => authStore.user)
+const isExecutor = computed(() => authStore.isExecutor)
+const isCustomer = computed(() => authStore.isCustomer)
 
 const tasks = computed(() => tasksStore.items)
 
@@ -83,6 +92,12 @@ async function applyFilters() {
 }
 
 onMounted(async () => {
+  const role = isExecutor.value ? 'executor' : 'customer'
+  await tasksStore.fetchTasks(role)
+  if (isExecutor.value) {
+    await responsesStore.fetchMyResponses()
+  }
+  loading.value = false
   if (route.query.search) {
     filters.value.search = route.query.search
   }
@@ -91,5 +106,12 @@ onMounted(async () => {
 
 function handleRespond(task) {
   alert('Отклик на задачу ' + task.id)
+}
+
+const showRespondButton = (task) => {
+  return isExecutor.value && 
+         task.status === 'search' && 
+         task.client.id !== user.value?.id && 
+         !responsesStore.hasResponded(task.id)
 }
 </script>

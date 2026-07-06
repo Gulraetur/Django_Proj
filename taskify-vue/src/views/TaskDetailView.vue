@@ -16,6 +16,9 @@
 
     <!-- Кнопки для заказчика (владельца) -->
     <div v-if="isCustomer && task.client && user && Number(task.client.id) === Number(user.id)" class="mt-3">
+      <button v-if="task.status === 'draft'" class="btn btn-success me-2" @click="publishTask">
+        Опубликовать (начать поиск исполнителя)
+      </button>
       <button v-if="task.status === 'draft' || task.status === 'search'" 
               class="btn btn-primary me-2" 
               @click="$router.push(`/tasks/${task.id}/edit`)">
@@ -29,8 +32,15 @@
     </div>
 
     <!-- Кнопка отклика (для исполнителя, если он не владелец и задача в поиске) -->
-    <div v-if="isExecutor && task.status === 'search' && task.client && user && Number(task.client.id) !== Number(user.id)" class="mt-3">
-      <button class="btn btn-success" @click="openResponseModal">Откликнуться</button>
+    <div v-if="isExecutor && task.status === 'search'" class="mt-3">
+      <button 
+        v-if="task.client && user && Number(task.client.id) !== Number(user.id) && !hasResponded" 
+        class="btn btn-success" 
+        @click="openResponseModal"
+      >
+        Откликнуться
+      </button>
+      <p v-else-if="hasResponded" class="text-muted">Вы уже откликнулись на эту задачу</p>
     </div>
 
     <!-- Блок для исполнителя: сдать результат -->
@@ -114,12 +124,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTasksStore } from '@/stores/tasks'
+import { useResponsesStore } from '@/stores/responses'
 import api from '@/api/axios'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const tasksStore = useTasksStore()
+const responsesStore = useResponsesStore()
 
 const task = computed(() => tasksStore.currentTask)
 const responses = computed(() => tasksStore.responses)
@@ -130,7 +142,6 @@ const user = computed(() => authStore.user)
 const showModal = ref(false)
 const responseComment = ref('')
 
-// Для сдачи результата
 const materials = ref([])
 const resultTitle = ref('')
 const resultFile = ref(null)
@@ -140,10 +151,17 @@ onMounted(async () => {
   const id = route.params.id
   await tasksStore.fetchTask(id)
   await fetchMaterials(id)
-  // Если заказчик – загружаем отклики
   if (isCustomer.value && task.value && task.value.client && user.value && Number(task.value.client.id) === Number(user.value.id)) {
     await tasksStore.fetchResponses(id)
   }
+  if (isExecutor.value) {
+    await responsesStore.fetchMyResponses()
+  }
+
+  const hasResponded = computed(() => {
+    if (!isExecutor.value || !task.value) return false
+    return responsesStore.hasResponded(Number(task.value.id))
+  })
 })
 
 // --- Отклики ---
@@ -255,6 +273,19 @@ async function requestRevision() {
   if (confirm('Отправить на доработку?')) {
     await tasksStore.requestRevision(task.value.id)
     await tasksStore.fetchTask(task.value.id)
+  }
+}
+
+async function publishTask() {
+  if (confirm('Опубликовать задачу? Она станет доступна исполнителям.')) {
+    try {
+      await api.post(`/tasks/${task.value.id}/publish/`)
+      await tasksStore.fetchTask(task.value.id)
+      alert('Задача опубликована!')
+    } catch (e) {
+      console.error(e)
+      alert('Ошибка публикации')
+    }
   }
 }
 </script>
