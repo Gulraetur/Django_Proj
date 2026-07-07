@@ -114,4 +114,14 @@ const showRespondButton = (task) => {
          task.client.id !== user.value?.id && 
          !responsesStore.hasResponded(task.id)
 }
+
+function editTask(task) {
+  route.push(`/tasks/${task.id}/edit`)
+}
+
+async function deleteTask(task) {
+  if (confirm(`Удалить задачу "${task.title}"?`)) {
+    await tasksStore.remove(task.id)
+  }
+}
 </script>

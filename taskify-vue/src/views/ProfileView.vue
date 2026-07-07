@@ -58,6 +58,8 @@
                 :task="task" 
                 :showRespondButton="false"
                 @click="goToTask(task.id)"
+                @edit="editTask"
+                @delete="deleteTask"
               />
               <p v-if="myTasks.length === 0">Нет созданных заказов.</p>
             </div>
