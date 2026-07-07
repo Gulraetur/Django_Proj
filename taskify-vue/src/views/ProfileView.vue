@@ -3,8 +3,9 @@
     <h2>Профиль</h2>
     <div class="row">
       <div class="col-md-4">
-        <p><strong>Имя:</strong> {{ user?.first_name }}</p>
+        <p><strong>Имя:</strong> {{ user?.first_name }} <strong>Фамилия:</strong> {{ user?.last_name }} </p>
         <p><strong>Email:</strong> {{ user?.email }}</p>
+        <p><strong>Телефон:</strong> {{ user?.phone }}</p>
         <p><strong>Роль:</strong> 
           <span v-if="isCustomer && isExecutor">Заказчик и Исполнитель</span>
           <span v-else-if="isCustomer">Заказчик</span>

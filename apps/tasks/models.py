@@ -22,6 +22,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлен")
     description = models.TextField(blank=True, verbose_name="Описание")
+    category = models.CharField(max_length=100, blank=True, verbose_name="Категория")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', verbose_name="Статус")
     
     file = models.FileField(upload_to='results/', blank=True, null=True, verbose_name="Файл задачи")
